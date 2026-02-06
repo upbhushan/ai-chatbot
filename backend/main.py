@@ -9,12 +9,26 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 
+# 🔐 Load environment variables
 load_dotenv()
+
+# 🚀 Create FastAPI app FIRST
+app = FastAPI()
+
+# 🌍 Enable CORS (very important for frontend)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 🔐 Initialize Groq model
 chat_model = ChatGroq(
     model_name="llama-3.1-8b-instant",
-    temperature=0.3
+    temperature=0.3,
+    groq_api_key=os.getenv("GROQ_API_KEY")
 )
 
 # 🧠 LangGraph state
@@ -34,21 +48,11 @@ graph.add_edge("chat_node", END)
 
 chatbot = graph.compile()
 
-# 🚀 FastAPI app
-app = FastAPI()
-
-# Enable CORS for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# 📩 Request model
 class ChatRequest(BaseModel):
     message: str
 
+# 💬 Chat endpoint
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):
     initial_state = {
